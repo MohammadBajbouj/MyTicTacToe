@@ -1,0 +1,623 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>mytictactoe</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Kalam:wght@400;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root{
+    --desk: #cddad2;
+    --desk-2: #bdccc3;
+    --paper: #f4f6ef;
+    --paper-edge: #dee4d6;
+    --grid-ink: #3c5064;
+    --margin: #cf4a58;
+    --ink-x: #24406b;
+    --ink-o: #9c2b2b;
+    --highlighter: #f6ca4d;
+    --text: #262b26;
+    --text-soft: #5d6a61;
+    --hole: #aeb8ab;
+    --hole-shadow: #8f9a8f;
+    --focus: #24406b;
+    --shadow: rgba(30, 40, 30, 0.28);
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --desk: #14181a;
+      --desk-2: #0e1112;
+      --paper: #1c2226;
+      --paper-edge: #12161a;
+      --grid-ink: #93a6b3;
+      --margin: #d9707a;
+      --ink-x: #8fb2e0;
+      --ink-o: #e29494;
+      --highlighter: #e8bd52;
+      --text: #e9ede9;
+      --text-soft: #9aa79f;
+      --hole: #2a3134;
+      --hole-shadow: #05070a;
+      --focus: #8fb2e0;
+      --shadow: rgba(0, 0, 0, 0.55);
+    }
+  }
+  :root[data-theme="dark"]{
+    --desk: #14181a;
+    --desk-2: #0e1112;
+    --paper: #1c2226;
+    --paper-edge: #12161a;
+    --grid-ink: #93a6b3;
+    --margin: #d9707a;
+    --ink-x: #8fb2e0;
+    --ink-o: #e29494;
+    --highlighter: #e8bd52;
+    --text: #e9ede9;
+    --text-soft: #9aa79f;
+    --hole: #2a3134;
+    --hole-shadow: #05070a;
+    --focus: #8fb2e0;
+    --shadow: rgba(0, 0, 0, 0.55);
+  }
+
+  *{ box-sizing: border-box; }
+  @media (prefers-reduced-motion: reduce){
+    *{ animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
+  }
+
+  body{
+    margin: 0;
+    background:
+      radial-gradient(ellipse 900px 600px at 50% -8%, var(--desk-2), transparent),
+      var(--desk);
+    color: var(--text);
+    font-family: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 18px;
+  }
+
+  .desk{
+    width: 100%;
+    display: flex;
+    justify-content: center;
+  }
+
+  .notebook{
+    position: relative;
+    width: 100%;
+    max-width: 440px;
+    background: var(--paper);
+    border-radius: 6px;
+    box-shadow:
+      0 1px 0 var(--paper-edge),
+      0 22px 40px -18px var(--shadow),
+      0 6px 16px -8px var(--shadow);
+    padding: 34px 26px 30px 52px;
+    transform: rotate(-0.4deg);
+  }
+
+  .spiral{
+    position: absolute;
+    left: 16px;
+    top: 22px;
+    bottom: 22px;
+    width: 12px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+  .spiral span{
+    display: block;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--hole);
+    box-shadow: inset 0 1px 2px var(--hole-shadow);
+  }
+
+  .margin-rule{
+    position: absolute;
+    left: 40px;
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    background: var(--margin);
+    opacity: 0.55;
+  }
+
+  .page-header{
+    margin: 0 0 18px;
+  }
+  .title{
+    font-family: "Kalam", cursive;
+    font-weight: 700;
+    font-size: 2.3rem;
+    line-height: 1;
+    margin: 0;
+    color: var(--text);
+    text-wrap: balance;
+  }
+  .byline{
+    font-family: "IBM Plex Sans", sans-serif;
+    font-size: 0.82rem;
+    color: var(--text-soft);
+    margin: 8px 0 0;
+    letter-spacing: 0.01em;
+  }
+
+  .status-row{
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px 12px;
+    margin-bottom: 14px;
+    min-height: 34px;
+  }
+  .status{
+    font-family: "Kalam", cursive;
+    font-weight: 700;
+    font-size: 1.35rem;
+    margin: 0;
+    color: var(--text);
+    flex: 1 1 auto;
+    min-width: 120px;
+  }
+  .status .who-x{ color: var(--ink-x); }
+  .status .who-o{ color: var(--ink-o); }
+
+  .controls{
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    flex: none;
+  }
+
+  .clear-board-btn{
+    font-family: "IBM Plex Sans", sans-serif;
+    font-size: 0.78rem;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    color: var(--text);
+    background: transparent;
+    border: 1.5px solid var(--text-soft);
+    border-radius: 999px;
+    padding: 7px 14px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+    transition: border-color 150ms ease, color 150ms ease, background 150ms ease;
+  }
+  .clear-board-btn:hover{
+    border-color: var(--ink-x);
+    color: var(--ink-x);
+    background: color-mix(in srgb, var(--ink-x) 8%, transparent);
+  }
+  .clear-board-btn:focus-visible,
+  .cell-hit:focus-visible{
+    outline: 2.5px solid var(--focus);
+    outline-offset: 2px;
+  }
+  .clear-board-btn svg{ width: 13px; height: 13px; flex: none; }
+
+  .board{
+    width: 100%;
+    height: auto;
+    display: block;
+    aspect-ratio: 1 / 1;
+    margin-bottom: 20px;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .cell-hit{
+    fill: transparent;
+    cursor: pointer;
+  }
+  .cell-hit:hover{ fill: color-mix(in srgb, var(--ink-x) 5%, transparent); }
+  .cell-hit[data-taken="true"]{ cursor: default; }
+  .cell-hit[data-taken="true"]:hover{ fill: transparent; }
+
+  .grid-lines path{
+    fill: none;
+    stroke: var(--grid-ink);
+    stroke-width: 6;
+    stroke-linecap: round;
+    opacity: 0.85;
+  }
+
+  .mark{ opacity: 0; }
+  .mark path{
+    fill: none;
+    stroke-width: 11;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    transition: stroke-dashoffset 320ms ease-out;
+  }
+  .mark.mark-x path{ stroke: var(--ink-x); }
+  .mark.mark-o path{ stroke: var(--ink-o); }
+
+  .win-highlight rect{
+    fill: var(--highlighter);
+    opacity: 0.55;
+    transform: scaleX(0);
+    transform-box: fill-box;
+    transform-origin: 0% 50%;
+    transition: transform 480ms cubic-bezier(.2,.8,.2,1);
+  }
+  .win-highlight.revealed rect{ transform: scaleX(1); }
+  .win-highlight.revealed{ opacity: 1; }
+  .win-highlight{ opacity: 0; transition: opacity 80ms linear; }
+
+  .scoreboard{
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px;
+    padding-top: 16px;
+    border-top: 1px dashed var(--paper-edge);
+  }
+  .score-col{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+  }
+  .score-label{
+    font-family: "Kalam", cursive;
+    font-size: 1rem;
+    font-weight: 700;
+  }
+  .score-col[data-player="X"] .score-label{ color: var(--ink-x); }
+  .score-col[data-player="O"] .score-label{ color: var(--ink-o); }
+  .score-col[data-player="tie"] .score-label{ color: var(--text-soft); font-family: "IBM Plex Sans"; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600; }
+
+  .tally{
+    display: flex;
+    gap: 3px;
+    height: 26px;
+    align-items: flex-end;
+  }
+  .tally svg{ width: 22px; height: 26px; overflow: visible; }
+  .tally-stroke{
+    stroke: var(--text-soft);
+    stroke-width: 2.4;
+    stroke-linecap: round;
+    fill: none;
+  }
+  .score-col[data-player="X"] .tally-stroke{ stroke: var(--ink-x); opacity: 0.8; }
+  .score-col[data-player="O"] .tally-stroke{ stroke: var(--ink-o); opacity: 0.8; }
+
+  .score-num{
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-variant-numeric: tabular-nums;
+    font-size: 0.85rem;
+    color: var(--text-soft);
+  }
+
+  @media (max-width: 380px){
+    .notebook{ padding: 28px 18px 24px 44px; }
+    .title{ font-size: 1.9rem; }
+  }
+</style>
+</head>
+<body>
+
+<div class="desk">
+  <main class="notebook">
+    <div class="spiral" aria-hidden="true">
+      <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+    </div>
+    <div class="margin-rule" aria-hidden="true"></div>
+
+    <header class="page-header">
+      <h1 class="title">tic·tac·toe</h1>
+      <p class="byline">three in a row wins — across, down, or diagonal</p>
+    </header>
+
+    <div class="status-row">
+      <p class="status" id="status" aria-live="polite">X's turn</p>
+      <div class="controls">
+        <button class="clear-board-btn" id="clearBoardBtn" type="button" title="Clear the board and start over with X">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 19h13M9.5 4.5 4 10l6.5 6.5a2 2 0 0 0 2.8 0l6-6a2 2 0 0 0 0-2.8l-3.7-3.7a2 2 0 0 0-2.8 0Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+          clear board
+        </button>
+      </div>
+    </div>
+
+    <svg class="board" id="board" viewBox="0 0 300 300" role="group" aria-label="Tic-tac-toe board, 3 by 3">
+      <g class="grid-lines" aria-hidden="true">
+        <path d="M101,8 C104,70 96,110 100,150 C104,190 97,230 99,292"></path>
+        <path d="M199,8 C196,60 203,100 199,150 C196,200 202,240 200,292"></path>
+        <path d="M8,101 C70,98 110,104 150,100 C190,97 230,103 292,99"></path>
+        <path d="M8,199 C60,203 100,196 150,200 C200,204 240,197 292,201"></path>
+      </g>
+
+      <g class="win-highlight" id="winHighlight">
+        <rect id="winRect" x="0" y="0" width="0" height="34" rx="4"></rect>
+      </g>
+
+      <!-- cells -->
+      <g class="cell" data-idx="0" transform="translate(0,0)">
+        <g class="mark mark-x"><path class="s1"></path><path class="s2"></path></g>
+        <g class="mark mark-o"><path class="s1"></path></g>
+        <rect class="cell-hit" x="0" y="0" width="100" height="100" tabindex="0" role="button" aria-label="Row 1, column 1, empty"></rect>
+      </g>
+      <g class="cell" data-idx="1" transform="translate(100,0)">
+        <g class="mark mark-x"><path class="s1"></path><path class="s2"></path></g>
+        <g class="mark mark-o"><path class="s1"></path></g>
+        <rect class="cell-hit" x="0" y="0" width="100" height="100" tabindex="0" role="button" aria-label="Row 1, column 2, empty"></rect>
+      </g>
+      <g class="cell" data-idx="2" transform="translate(200,0)">
+        <g class="mark mark-x"><path class="s1"></path><path class="s2"></path></g>
+        <g class="mark mark-o"><path class="s1"></path></g>
+        <rect class="cell-hit" x="0" y="0" width="100" height="100" tabindex="0" role="button" aria-label="Row 1, column 3, empty"></rect>
+      </g>
+      <g class="cell" data-idx="3" transform="translate(0,100)">
+        <g class="mark mark-x"><path class="s1"></path><path class="s2"></path></g>
+        <g class="mark mark-o"><path class="s1"></path></g>
+        <rect class="cell-hit" x="0" y="0" width="100" height="100" tabindex="0" role="button" aria-label="Row 2, column 1, empty"></rect>
+      </g>
+      <g class="cell" data-idx="4" transform="translate(100,100)">
+        <g class="mark mark-x"><path class="s1"></path><path class="s2"></path></g>
+        <g class="mark mark-o"><path class="s1"></path></g>
+        <rect class="cell-hit" x="0" y="0" width="100" height="100" tabindex="0" role="button" aria-label="Row 2, column 2, empty"></rect>
+      </g>
+      <g class="cell" data-idx="5" transform="translate(200,100)">
+        <g class="mark mark-x"><path class="s1"></path><path class="s2"></path></g>
+        <g class="mark mark-o"><path class="s1"></path></g>
+        <rect class="cell-hit" x="0" y="0" width="100" height="100" tabindex="0" role="button" aria-label="Row 2, column 3, empty"></rect>
+      </g>
+      <g class="cell" data-idx="6" transform="translate(0,200)">
+        <g class="mark mark-x"><path class="s1"></path><path class="s2"></path></g>
+        <g class="mark mark-o"><path class="s1"></path></g>
+        <rect class="cell-hit" x="0" y="0" width="100" height="100" tabindex="0" role="button" aria-label="Row 3, column 1, empty"></rect>
+      </g>
+      <g class="cell" data-idx="7" transform="translate(100,200)">
+        <g class="mark mark-x"><path class="s1"></path><path class="s2"></path></g>
+        <g class="mark mark-o"><path class="s1"></path></g>
+        <rect class="cell-hit" x="0" y="0" width="100" height="100" tabindex="0" role="button" aria-label="Row 3, column 2, empty"></rect>
+      </g>
+      <g class="cell" data-idx="8" transform="translate(200,200)">
+        <g class="mark mark-x"><path class="s1"></path><path class="s2"></path></g>
+        <g class="mark mark-o"><path class="s1"></path></g>
+        <rect class="cell-hit" x="0" y="0" width="100" height="100" tabindex="0" role="button" aria-label="Row 3, column 3, empty"></rect>
+      </g>
+    </svg>
+
+    <div class="scoreboard">
+      <div class="score-col" data-player="X">
+        <span class="score-label">X</span>
+        <div class="tally" id="tallyX"></div>
+        <span class="score-num" id="scoreX">0</span>
+      </div>
+      <div class="score-col" data-player="tie">
+        <span class="score-label">ties</span>
+        <div class="tally" id="tallyT"></div>
+        <span class="score-num" id="scoreT">0</span>
+      </div>
+      <div class="score-col" data-player="O">
+        <span class="score-label">O</span>
+        <div class="tally" id="tallyO"></div>
+        <span class="score-num" id="scoreO">0</span>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+(function(){
+  var XPATHS = {
+    s1: "M28,26 C42,44 55,58 74,76",
+    s2: "M74,26 C58,42 43,58 26,75"
+  };
+  var OPATH = "M50,22 C68,21 79,35 78,50 C79,66 65,80 49,78 C33,79 21,64 22,49 C21,33 33,23 50,22 Z";
+
+  var WIN_COMBOS = [
+    [0,1,2],[3,4,5],[6,7,8],
+    [0,3,6],[1,4,7],[2,5,8],
+    [0,4,8],[2,4,6]
+  ];
+
+  var HIGHLIGHT_GEOM = {
+    "0,1,2": {x:12, y:33,  w:276, h:34, transform:"rotate(-1 150 50)"},
+    "3,4,5": {x:12, y:133, w:276, h:34, transform:"rotate(0.6 150 150)"},
+    "6,7,8": {x:12, y:233, w:276, h:34, transform:"rotate(-0.8 150 250)"},
+    "0,3,6": {x:33, y:12,  w:34,  h:276, transform:"rotate(91 50 150)"},
+    "1,4,7": {x:133,y:12,  w:34,  h:276, transform:"rotate(89.4 150 150)"},
+    "2,5,8": {x:233,y:12,  w:34,  h:276, transform:"rotate(90.8 250 150)"},
+    "0,4,8": {x:-40,y:133, w:380, h:34, transform:"rotate(45 150 150)"},
+    "2,4,6": {x:-40,y:133, w:380, h:34, transform:"rotate(-45 150 150)"}
+  };
+
+  var board = Array(9).fill(null);
+  var current = "X";
+  var over = false;
+  var score = { X: 0, O: 0, tie: 0 };
+
+  var statusEl = document.getElementById("status");
+  var clearBoardBtn = document.getElementById("clearBoardBtn");
+  var winHighlight = document.getElementById("winHighlight");
+  var winRect = document.getElementById("winRect");
+  var cells = Array.prototype.slice.call(document.querySelectorAll(".cell"));
+
+  function loadScore(){
+    try{
+      var raw = localStorage.getItem("ttt-score");
+      if(raw){
+        var parsed = JSON.parse(raw);
+        if(typeof parsed.X === "number") score.X = parsed.X;
+        if(typeof parsed.O === "number") score.O = parsed.O;
+        if(typeof parsed.tie === "number") score.tie = parsed.tie;
+      }
+    }catch(e){}
+  }
+  function saveScore(){
+    try{ localStorage.setItem("ttt-score", JSON.stringify(score)); }catch(e){}
+  }
+
+  function tallyMarkup(n){
+    var groups = [];
+    var full = Math.floor(n / 5);
+    var rem = n % 5;
+    for(var g=0; g<full; g++) groups.push(5);
+    if(rem > 0) groups.push(rem);
+    if(groups.length === 0) groups.push(0);
+    return groups.map(function(count){
+      var bars = "";
+      for(var i=0;i<Math.min(count,4);i++){
+        var x = 3 + i*5;
+        bars += '<line class="tally-stroke" x1="'+x+'" y1="24" x2="'+x+'" y2="4"></line>';
+      }
+      if(count === 5){
+        bars += '<line class="tally-stroke" x1="1" y1="22" x2="20" y2="6"></line>';
+      }
+      return '<svg viewBox="0 0 22 26">'+bars+'</svg>';
+    }).join("");
+  }
+
+  function renderScore(){
+    document.getElementById("scoreX").textContent = score.X;
+    document.getElementById("scoreO").textContent = score.O;
+    document.getElementById("scoreT").textContent = score.tie;
+    document.getElementById("tallyX").innerHTML = tallyMarkup(score.X);
+    document.getElementById("tallyO").innerHTML = tallyMarkup(score.O);
+    document.getElementById("tallyT").innerHTML = tallyMarkup(score.tie);
+  }
+
+  function setStatus(){
+    if(over) return;
+    statusEl.innerHTML = '<span class="who-'+current.toLowerCase()+'">'+current+'</span>’s turn';
+  }
+
+  function drawMark(cellEl, player){
+    var group = cellEl.querySelector(".mark-" + player.toLowerCase());
+    group.style.opacity = "1";
+    var paths = group.querySelectorAll("path");
+    paths.forEach(function(p, i){
+      var len = p.getTotalLength();
+      p.style.strokeDasharray = len;
+      p.style.strokeDashoffset = len;
+      p.getBoundingClientRect();
+      setTimeout(function(){
+        p.style.strokeDashoffset = "0";
+      }, i * 110);
+    });
+  }
+
+  function checkWinner(b, player){
+    for(var i=0;i<WIN_COMBOS.length;i++){
+      var c = WIN_COMBOS[i];
+      if(b[c[0]] === player && b[c[1]] === player && b[c[2]] === player){
+        return c;
+      }
+    }
+    return null;
+  }
+
+  function showWin(combo){
+    var geom = HIGHLIGHT_GEOM[combo.join(",")];
+    winRect.setAttribute("x", geom.x);
+    winRect.setAttribute("y", geom.y);
+    winRect.setAttribute("width", geom.w);
+    winRect.setAttribute("height", geom.h);
+    winHighlight.setAttribute("transform", geom.transform);
+    requestAnimationFrame(function(){
+      winHighlight.classList.add("revealed");
+    });
+  }
+
+  function onCellActivate(cellEl){
+    if(over) return;
+    var idx = parseInt(cellEl.getAttribute("data-idx"), 10);
+    if(board[idx]) return;
+
+    board[idx] = current;
+    var hit = cellEl.querySelector(".cell-hit");
+    hit.setAttribute("data-taken", "true");
+    hit.setAttribute("aria-label", "Row " + (Math.floor(idx/3)+1) + ", column " + (idx%3+1) + ", " + current);
+    drawMark(cellEl, current);
+
+    var winCombo = checkWinner(board, current);
+    if(winCombo){
+      over = true;
+      showWin(winCombo);
+      statusEl.innerHTML = '<span class="who-'+current.toLowerCase()+'">'+current+'</span> won!';
+      score[current] += 1;
+      renderScore();
+      saveScore();
+      return;
+    }
+
+    if(board.every(function(v){ return v !== null; })){
+      over = true;
+      statusEl.textContent = "it's a tie!";
+      score.tie += 1;
+      renderScore();
+      saveScore();
+      return;
+    }
+
+    current = current === "X" ? "O" : "X";
+    setStatus();
+  }
+
+  cells.forEach(function(cellEl){
+    var hit = cellEl.querySelector(".cell-hit");
+    hit.addEventListener("click", function(){ onCellActivate(cellEl); });
+    hit.addEventListener("keydown", function(e){
+      if(e.key === "Enter" || e.key === " "){
+        e.preventDefault();
+        onCellActivate(cellEl);
+      }
+    });
+  });
+
+  function resetBoard(){
+    board = Array(9).fill(null);
+    current = "X";
+    over = false;
+    winHighlight.classList.remove("revealed");
+    cells.forEach(function(cellEl){
+      ["mark-x","mark-o"].forEach(function(cls){
+        var group = cellEl.querySelector("." + cls);
+        group.style.opacity = "0";
+        cellEl.querySelectorAll("." + cls + " path").forEach(function(p){
+          p.style.transition = "none";
+          var len = p.getTotalLength();
+          p.style.strokeDasharray = len;
+          p.style.strokeDashoffset = len;
+          p.getBoundingClientRect();
+          p.style.removeProperty("transition");
+        });
+      });
+      var hit = cellEl.querySelector(".cell-hit");
+      hit.removeAttribute("data-taken");
+      var idx = parseInt(cellEl.getAttribute("data-idx"),10);
+      hit.setAttribute("aria-label", "Row " + (Math.floor(idx/3)+1) + ", column " + (idx%3+1) + ", empty");
+    });
+    setStatus();
+  }
+
+  clearBoardBtn.addEventListener("click", resetBoard);
+
+  cells.forEach(function(cellEl){
+    var gx = cellEl.querySelector(".mark-x .s1");
+    var gx2 = cellEl.querySelector(".mark-x .s2");
+    var go = cellEl.querySelector(".mark-o .s1");
+    gx.setAttribute("d", XPATHS.s1);
+    gx2.setAttribute("d", XPATHS.s2);
+    go.setAttribute("d", OPATH);
+  });
+
+  loadScore();
+  renderScore();
+  setStatus();
+})();
+</script>
+
+</body>
+</html>
